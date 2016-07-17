@@ -53,6 +53,15 @@ private:
       \return true if success, false otherwise.
       */
     static bool compressFile(QuaZip* zip, QString fileName, QString fileDest);
+	/// Compress a single file.
+	/**
+	\param zip Opened zip to compress the file to.
+	\param fileName The full path to the source file.
+	\param fileDest The full name of the file inside the archive.
+	\param password The password specifies a password to encrypt the file
+	\return true if success, false otherwise.
+	*/
+	static bool compressFile(QuaZip * zip, QString fileName, QString fileDest, QString password);
     /// Compress a subdirectory.
     /**
       \param parentZip Opened zip containing the parent directory.
@@ -88,6 +97,14 @@ public:
       \return true if success, false otherwise.
       */
     static bool compressFile(QString fileCompressed, QString file);
+	/// Compress a single file.
+	/**
+	\param fileCompressed The name of the archive.
+	\param file The file to compress.
+	\param password It specifies a password to encrypt the file
+	\return true if success, false otherwise.
+	*/
+	static bool compressFile(QString fileCompressed, QString file, QString password);
     /// Compress a list of files.
     /**
       \param fileCompressed The name of the archive.

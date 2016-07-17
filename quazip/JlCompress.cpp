@@ -72,6 +72,43 @@ bool JlCompress::compressFile(QuaZip* zip, QString fileName, QString fileDest) {
     return true;
 }
 
+bool JlCompress::compressFile(QuaZip* zip, QString fileName, QString fileDest, QString password) {
+	// zip: oggetto dove aggiungere il file
+	// fileName: nome del file reale
+	// fileDest: nome del file all'interno del file compresso
+
+	// Controllo l'apertura dello zip
+	if (!zip) return false;
+	if (zip->getMode() != QuaZip::mdCreate &&
+		zip->getMode() != QuaZip::mdAppend &&
+		zip->getMode() != QuaZip::mdAdd) return false;
+
+	// Apro il file originale
+	QFile inFile;
+	inFile.setFileName(fileName);
+	if (!inFile.open(QIODevice::ReadOnly)) return false;
+
+	//convert to appropriate format 
+	QByteArray  passwordBytes = password.toUtf8();
+	const char *_password = passwordBytes.constData();
+
+	// Apro il file risulato
+	QuaZipFile outFile(zip);
+	if (!outFile.open(QIODevice::WriteOnly, QuaZipNewInfo(fileDest, inFile.fileName()), _password)) return false;
+
+	// Copio i dati
+	if (!copyData(inFile, outFile) || outFile.getZipError() != UNZ_OK) {
+		return false;
+	}
+
+	// Chiudo i file
+	outFile.close();
+	if (outFile.getZipError() != UNZ_OK) return false;
+	inFile.close();
+
+	return true;
+}
+
 bool JlCompress::compressSubDir(QuaZip* zip, QString dir, QString origDir, bool recursive, QDir::Filters filters) {
     // zip: oggetto dove aggiungere il file
     // dir: cartella reale corrente
@@ -223,6 +260,31 @@ bool JlCompress::compressFile(QString fileCompressed, QString file) {
     }
 
     return true;
+}
+
+bool JlCompress::compressFile(QString fileCompressed, QString file,QString password) {
+	// Creo lo zip
+	QuaZip zip(fileCompressed);
+	QDir().mkpath(QFileInfo(fileCompressed).absolutePath());
+	if (!zip.open(QuaZip::mdCreate)) {
+		QFile::remove(fileCompressed);
+		return false;
+	}
+
+	// Aggiungo il file
+	if (!compressFile(&zip, file, QFileInfo(file).fileName(),password)) {
+		QFile::remove(fileCompressed);
+		return false;
+	}
+
+	// Chiudo il file zip
+	zip.close();
+	if (zip.getZipError() != 0) {
+		QFile::remove(fileCompressed);
+		return false;
+	}
+
+	return true;
 }
 
 bool JlCompress::compressFiles(QString fileCompressed, QStringList files) {
